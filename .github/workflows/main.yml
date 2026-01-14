@@ -15,9 +15,11 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Capacitor Sync
+   - name: Capacitor Sync
         run: |
+          mkdir -p www # Asegura que la carpeta existe
           npx cap add ios
+          npx cap copy ios # Forzamos el copiado de los assets
           npx cap sync ios
 
       - name: Build Xcode Project
