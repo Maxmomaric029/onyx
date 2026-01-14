@@ -1,0 +1,6 @@
+{
+  "appId": "com.onyx.panel",
+  "appName": "ONYX IPA",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
