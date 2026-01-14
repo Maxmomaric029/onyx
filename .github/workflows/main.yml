@@ -5,21 +5,29 @@ jobs:
   build-ios:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4 # Actualizado a v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4 # Actualizado a v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20 # Usamos una versión de Node más moderna
+          node-version: 20
 
       - name: Install Dependencies
-        run: npm install
-
-   - name: Capacitor Sync
         run: |
-          mkdir -p www # Asegura que la carpeta existe
+          npm install
+          npm install @capacitor/cli @capacitor/core @capacitor/ios
+
+      - name: Prepare Web Assets
+        run: |
+          # Aseguramos que la carpeta existe y el archivo está en su lugar
+          mkdir -p www
+          ls -R www # Esto imprimirá en el log si el archivo index.html realmente está ahí
+
+      - name: Capacitor Build
+        run: |
           npx cap add ios
-          npx cap copy ios # Forzamos el copiado de los assets
+          npx cap copy ios
           npx cap sync ios
 
       - name: Build Xcode Project
