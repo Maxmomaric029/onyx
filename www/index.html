@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PANEL LEGIT VIP</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #ff004c; 
+            --primary-dim: #990033; 
+            --white: #ffffff;
+            --text-gray: #b0b0b0;
+            --glass-bg: rgba(10, 5, 10, 0.90);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glow: 0 0 30px rgba(255, 0, 76, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            height: 100vh; width: 100vw;
+            display: flex; align-items: center; justify-content: center;
+            background: url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmZ0bnZ4Y3B6Y3B6Y3B6Y3B6Y3B6Y3B6/3o7TKsAD28DR1fCWOy/giphy.gif') no-repeat center center fixed;
+            background-size: cover;
+            overflow: hidden;
+        }
+
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 0;
+        }
+
+        .panel-container {
+            position: relative; z-index: 10;
+            width: 90%; max-width: 420px; height: 620px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-radius: 30px; border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), var(--glow);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* HEADER */
+        .header {
+            padding: 25px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .brand h1 { color: var(--white); font-size: 20px; font-weight: 800; font-style: italic; text-shadow: 0 0 10px rgba(255, 0, 76, 0.6); }
+        .brand span { color: var(--primary); font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .user-status {
+            display: flex; align-items: center; gap: 8px; background: rgba(255,0,76,0.1); 
+            padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,0,76,0.2);
+        }
+        .dot { width: 6px; height: 6px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 8px #00ff88; }
+        .status-text { font-size: 10px; color: #fff; font-weight: 700; }
+
+        /* BODY */
+        .content-body { flex: 1; display: flex; }
+        .sidebar {
+            width: 70px; background: rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center;
+            padding-top: 30px; gap: 30px; border-right: 1px solid rgba(255,255,255,0.03);
+        }
+        .nav-icon { color: rgba(255,255,255,0.3); cursor: pointer; transition: 0.4s; position: relative; }
+        .nav-icon.active { color: var(--primary); filter: drop-shadow(0 0 8px var(--primary)); transform: scale(1.1); }
+
+        .options-area { flex: 1; padding: 25px; overflow-y: auto; }
+        .options-area::-webkit-scrollbar { width: 0px; }
+
+        .tab-content { display: none; animation: fadeUp 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-title {
+            color: var(--text-gray); font-size: 10px; font-weight: 800; letter-spacing: 2px;
+            margin-bottom: 20px; text-transform: uppercase; border-left: 3px solid var(--primary); padding-left: 10px;
+        }
+
+        /* FEATURES */
+        .feature-row {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+            padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.02); transition: 0.3s;
+        }
+        .feature-row:hover { background: rgba(255,255,255,0.06); border-color: var(--primary-dim); }
+        .feat-info h3 { color: #fff; font-size: 13px; font-weight: 700; margin-bottom: 4px; font-style: italic; }
+        .feat-info p { color: #888; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* SWITCH */
+        .switch { position: relative; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #2b2b2b; border-radius: 34px; transition: .4s; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: #666; border-radius: 50%; transition: .4s; }
+        input:checked + .slider { background-color: var(--primary); box-shadow: 0 0 15px var(--primary-dim); }
+        input:checked + .slider:before { transform: translateX(20px); background-color: white; }
+
+        /* SLIDERS */
+        .range-container { margin-bottom: 25px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; }
+        .range-header { display: flex; justify-content: space-between; margin-bottom: 10px; color: white; font-size: 11px; font-weight: bold; }
+        input[type=range] { width: 100%; -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: var(--primary); margin-top: -6px; box-shadow: 0 0 10px var(--primary); border: 2px solid white;
+        }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
+
+        /* BOTON FREE FIRE */
+        .launch-btn {
+            width: 100%; padding: 18px; margin-top: 10px;
+            background: linear-gradient(90deg, #ff9100, #ff5e00); /* Naranja FF */
+            border: none; border-radius: 15px; color: white;
+            font-weight: 900; font-size: 16px; letter-spacing: 1px; font-style: italic;
+            cursor: pointer; box-shadow: 0 5px 20px rgba(255, 94, 0, 0.4);
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            transition: transform 0.2s;
+        }
+        .launch-btn:active { transform: scale(0.95); }
+
+        /* LOGIN */
+        #login-view {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 10, 0.98); z-index: 100;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center;
+        }
+        .login-input {
+            width: 100%; padding: 18px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; text-align: center;
+            margin: 25px 0; outline: none; font-size: 14px; letter-spacing: 2px; font-weight: bold;
+        }
+        .btn-enter {
+            width: 100%; padding: 16px; background: linear-gradient(90deg, #990033, #ff004c);
+            border: none; border-radius: 12px; color: white; font-weight: 800; font-size: 14px; letter-spacing: 2px;
+            cursor: pointer; box-shadow: 0 5px 20px rgba(255, 0, 76, 0.4); text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="overlay"></div>
+
+    <div class="panel-container">
+        
+        <!-- LOGIN -->
+        <div id="login-view">
+            <i data-lucide="shield-check" style="color:var(--primary); width: 70px; height: 70px; margin-bottom: 20px; filter: drop-shadow(0 0 10px red);"></i>
+            <h2 style="color:white; font-weight:800; letter-spacing:1px; font-style:italic;">PANEL LEGIT VIP</h2>
+            <p style="color:#666; font-size:10px; margin-top:5px; text-transform:uppercase; letter-spacing:2px;">by bbloodie Hackz</p>
+            <input type="text" class="login-input" placeholder="KEY DE ACCESO">
+            <button class="btn-enter" onclick="unlockPanel()">VERIFICAR KEY</button>
+        </div>
+
+        <!-- MAIN -->
+        <div class="header">
+            <div class="brand">
+                <h1>SENSITIVITY X</h1>
+                <span>🇧🇷 bbloodie Hackz Legit</span>
+            </div>
+            <div class="user-status">
+                <div class="dot"></div>
+                <span class="status-text">SAFE</span>
+            </div>
+        </div>
+
+        <div class="content-body">
+            <div class="sidebar">
+                <i data-lucide="crosshair" class="nav-icon active" onclick="tab(0)"></i>
+                <i data-lucide="mouse-pointer-2" class="nav-icon" onclick="tab(1)"></i>
+                <i data-lucide="smartphone" class="nav-icon" onclick="tab(2)"></i> <!-- Icono cambiado a Smartphone -->
+                <i data-lucide="settings" class="nav-icon" onclick="tab(3)"></i>
+            </div>
+
+            <div class="options-area">
+                
+                <!-- TAB 0: COMBAT LEGIT -->
+                <div id="tab-0" class="tab-content active">
+                    <div class="section-title">🎯 Aim Assist & Sensi</div>
+                    
+                    <div class="feature-row">
+                        <div class="feat-info"><h3>AimLock Suave</h3><p>Ayuda ligera (Legit)</p></div>
+                        <label class="switch"><input type="checkbox" onchange="haptic()"><span class="slider"></span></label>
+                    </div>
+
+                    <div class="range-container">
+                        <div class="range-header"><span>Sensi General</span><span>200%</span></div>
+                        <input type="range" min="0" max="200" value="150">
+                    </div>
+
+                    <div class="feature-row">
+                        <div class="feat-info"><h3>Estabilizador de Mira</h3><p>Reduce recoil 40%</p></div>
+                        <label class="switch"><input type="checkbox" onchange="haptic()"><span class="slider"></span></label>
+                    </div>
+
+                    <div class="feature-row">
+                        <div class="feat-info"><h3>Sensi iPhone</h3><p>Regedit Mobile V3</p></div>
+                        <label class="switch"><input type="checkbox" onchange="haptic()"><span class="slider"></span></label>
+                    </div>
+                </div>
+
+                <!-- TAB 1: MOVEMENT LEGIT -->
+                <div id="tab-1" class="tab-content">
+                    <div class="section-title">⚡ Touch & Macro</div>
+                    <div class="feature-row">
+                        <div class="feat-info"><h3>Macro Gelo</h3><p>Gelo Rápido (Legit)</p></div>
+                        <label class="switch"><input type="checkbox" onchange="haptic()"><span class="slider"></span></label>
+                    </div>
+                    
+                    <div class="feature-row">
+                        <div class="feat-info"><h3>Touch Speed</h3><p>Respuesta 0.5ms</p></div>
+                        <label class="switch"><input type="checkbox" onchange="haptic()"><span class="slider"></span></label>
+                    </div>
+                    
+                    <div class="feature-row">
+                        <div class="feat-info"><h3>360° Movement</h3><p>Movimiento Fluido</p></div>
+                        <label class="switch"><input type="checkbox" onchange="haptic()"><span class="slider"></span></label>
+                    </div>
+                </div>
+
+                <!-- TAB 2: OPTIMIZATION (Antiguo ESP) -->
+                <div id="tab-2" class="tab-content">
+                    <div class="section-title">🚀 Otimização FPS</div>
+                    
+                    <div class="feature-row">
+                        <div class="feat-info"><h3>60 FPS Estables</h3><p>Lock Framerate</p></div>
+                        <label class="switch"><input type="checkbox" onchange="haptic()"><span class="slider"></span></label>
+                    </div>
+                    
+                    <div class="feature-row">
+                        <div class="feat-info"><h3>Limpiar Cache RAM</h3><p>Boost Memory</p></div>
+                        <label class="switch"><input type="checkbox" onchange="haptic()"><span class="slider"></span></label>
+                    </div>
+                    
+                    <div class="feature-row">
+                        <div class="feat-info"><h3>Resfriar CPU</h3><p>Evitar Lag</p></div>
+                        <label class="switch"><input type="checkbox" onchange="haptic()"><span class="slider"></span></label>
+                    </div>
+                </div>
+
+                <!-- TAB 3: SETTINGS & LAUNCH -->
+                <div id="tab-3" class="tab-content">
+                    <div class="section-title">🛡️ Security & Launch</div>
+                    
+                    <div class="feature-row">
+                        <div class="feat-info"><h3>Bypass Antiban</h3><p>Protección Activa</p></div>
+                        <label class="switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+                    </div>
+                     <div class="feature-row">
+                        <div class="feat-info"><h3>Fix Blacklist</h3><p>Optimizar Match</p></div>
+                        <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                    </div>
+
+                    <!-- BOTON ABRIR FREE FIRE -->
+                    <button class="launch-btn" onclick="openFF()">
+                        <i data-lucide="play-circle"></i> ABRIR FREE FIRE
+                    </button>
+                    
+                    <p style="text-align:center; color:#555; font-size:9px; margin-top:10px;">Versión: bbloodie 4.5 [Legit]</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function unlockPanel() {
+            const btn = document.querySelector('.btn-enter');
+            const input = document.querySelector('.login-input');
+            
+            if(input.value.length < 1) {
+                input.style.borderColor = "red";
+                return;
+            }
+
+            btn.innerText = "AUTHENTICATING...";
+            btn.style.opacity = "0.7";
+            
+            setTimeout(() => {
+                document.getElementById('login-view').style.opacity = '0';
+                document.getElementById('login-view').style.transition = 'opacity 0.5s';
+                setTimeout(() => {
+                    document.getElementById('login-view').style.display = 'none';
+                }, 500);
+            }, 1000);
+        }
+
+        function tab(index) {
+            haptic();
+            document.querySelectorAll('.nav-icon').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-icon')[index].classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${index}`).classList.add('active');
+        }
+
+        function haptic() {
+            if(navigator.vibrate) navigator.vibrate(15);
+        }
+
+        function openFF() {
+            haptic();
+            // Intenta abrir Free Fire normal y Max
+            window.location.href = "freefireth://";
+            setTimeout(() => {
+                window.location.href = "freefiremax://"; // Fallback por si usan el Max
+            }, 500);
+        }
+    </script>
+</body>
+</html>
