@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
     <title>ONYX IPA</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -273,74 +274,77 @@
     </div>
 
     <script>
-        lucide.createIcons();
+    lucide.createIcons();
 
-        // ----------------------------------------------------
-        // CONFIGURACIÓN KEYAUTH (¡RELLENA ESTO!)
-        // ----------------------------------------------------
-        const Config = {
-            name: "PANEL IPA", // Tu Application Name de KeyAuth
-            ownerid: "tUa2yiLIT9", // Tu OwnerID
-            version: "1.0" // Tu versión
-        };
-        // ----------------------------------------------------
+    const Config = {
+        name: "PANEL IPA", 
+        ownerid: "tUa2yiLIT9",
+        version: "1.0"
+    };
 
-        async function login() {
-            const key = document.getElementById("license").value;
-            const btn = document.getElementById("btn-login");
-            const status = document.getElementById("status");
+    // PROXY PARA EVITAR EL BLOQUEO DE IOS/CORS
+    const proxy = "https://cors-anywhere.herokuapp.com/"; 
+    const baseUrl = "https://keyauth.win/api/1.2/";
 
-            if(key.length < 5) {
-                status.innerText = "Error: Key muy corta.";
-                return;
-            }
+    async function login() {
+        const key = document.getElementById("license").value;
+        const btn = document.getElementById("btn-login");
+        const status = document.getElementById("status");
 
-            btn.disabled = true;
-            btn.innerHTML = "VERIFICANDO...";
-            status.innerText = "";
+        if(key.length < 5) {
+            status.innerText = "Key muy corta.";
+            return;
+        }
 
-            try {
-                // 1. INICIALIZAR SESIÓN (Fetch a KeyAuth)
-                // Nota: Usar API KeyAuth directo desde navegador puede dar error CORS.
-                // Si da error, usa esta URL base: https://keyauth.win/api/1.2/
-                
-                const initUrl = `https://keyauth.win/api/1.2/?type=init&ver=${Config.version}&name=${Config.name}&ownerid=${Config.ownerid}`;
-                
-                const initResponse = await fetch(initUrl);
-                const initData = await initResponse.json();
+        btn.disabled = true;
+        btn.innerHTML = "CONECTANDO AL SERVIDOR...";
+        status.innerText = "";
 
-                if (initData.success) {
-                    const sessionID = initData.sessionid;
+        try {
+            // 1. INIT - Usando el proxy si el fetch normal falla
+            let initUrl = `${baseUrl}?type=init&ver=${Config.version}&name=${Config.name}&ownerid=${Config.ownerid}`;
+            
+            let initResp = await fetch(initUrl).catch(() => fetch(proxy + initUrl));
+            let initData = await initResp.json();
 
-                    // 2. VERIFICAR LICENCIA
-                    const loginUrl = `https://keyauth.win/api/1.2/?type=license&key=${key}&hwid=web_user&sessionid=${sessionID}&name=${Config.name}&ownerid=${Config.ownerid}`;
-                    
-                    const loginResponse = await fetch(loginUrl);
-                    const loginData = await loginResponse.json();
+            if (!initData.success) throw new Error(initData.message);
 
-                    if (loginData.success) {
-                        // ÉXITO
-                        unlockPanel(loginData.info || "Usuario VIP");
-                    } else {
-                        // FALLO DE KEY
-                        throw new Error(loginData.message);
-                    }
-                } else {
-                    // FALLO DE INIT
-                    throw new Error(initData.message);
-                }
+            // 2. LICENSE
+            let loginUrl = `${baseUrl}?type=license&key=${key}&hwid=iphone_user&sessionid=${initData.sessionid}&name=${Config.name}&ownerid=${Config.ownerid}`;
+            
+            let loginResp = await fetch(loginUrl).catch(() => fetch(proxy + loginUrl));
+            let loginData = await loginResp.json();
 
-            } catch (error) {
-                console.error(error);
-                status.innerText = "Error: NO TIENES KEY VALIDA.";
+            if (loginData.success) {
+                unlockPanel();
+            } else {
+                status.innerText = "KEY INVÁLIDA O EXPIRADA";
                 btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="key"></i> VERIFY KEY';
-                lucide.createIcons();
-                
-                // MODO PRUEBA: Si no has configurado KeyAuth, descomenta esto para entrar con cualquier key:
-                // if(key === "1234") unlockPanel("Modo Prueba"); 
             }
+
+        } catch (error) {
+            // Si llega aquí es por bloqueo de Apple o de Red
+            status.innerText = "ERROR DE CONEXIÓN (CORS/NETWORK)";
+            console.error("Error detallado:", error);
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="key"></i> REINTENTAR';
         }
+        lucide.createIcons();
+    }
+
+    function unlockPanel() {
+        const screen = document.getElementById('login-screen');
+        screen.style.transition = "opacity 0.5s";
+        screen.style.opacity = "0";
+        document.getElementById('user-display').innerText = "Licencia Activa";
+        document.getElementById('user-display').style.color = "#00e5ff";
+        const badge = document.getElementById('badge-display');
+        badge.innerText = "VERIFIED";
+        badge.style.color = "#00ff88";
+        badge.style.borderColor = "#00ff88";
+        setTimeout(() => screen.style.display = "none", 500);
+    }
 
         function unlockPanel(userInfo) {
             const screen = document.getElementById('login-screen');
