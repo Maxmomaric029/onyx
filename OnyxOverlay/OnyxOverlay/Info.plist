@@ -1,335 +1,99 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ONYX IPA</title>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        :root {
-            --primary: #a020f0; 
-            --primary-dark: #4b0082;
-            --accent: #00e5ff; 
-            --glass: rgba(18, 18, 18, 0.90);
-            --border: rgba(255, 255, 255, 0.1);
-        }
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- NOMBRE DE LA APP -->
+    <key>CFBundleName</key>
+    <string>OnyxOverlay</string>
+    <key>CFBundleDisplayName</key>
+    <string>ONYX IPA</string>
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
-        
-        body {
-            height: 100vh; width: 100vw; overflow: hidden;
-            display: flex; align-items: center; justify-content: center;
-            background: url('https://i.pinimg.com/1200x/aa/9c/8e/aa9c8e6668a9e94439b3e434901254cc.jpg') no-repeat center center fixed;
-            background-size: cover;
-        }
+    <!-- IDENTIFICADOR (IMPORTANTE) -->
+    <key>CFBundleIdentifier</key>
+    <string>com.bbloodie.onyx.overlay</string>
+    
+    <!-- VERSION -->
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
 
-        .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); z-index: 1; }
+    <!-- TIPO DE EJECUTABLE -->
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    
+    <!-- PERMISOS DE INTERNET (OBLIGATORIO PARA KEYAUTH) -->
+    <!-- Sin esto, KeyAuth fallará -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
 
-        #fov-visual {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            border: 2px solid rgba(160, 32, 240, 0.6); border-radius: 50%;
-            pointer-events: none; z-index: 9999; box-shadow: 0 0 15px rgba(160, 32, 240, 0.3);
-            display: none; transition: width 0.2s, height 0.2s;
-        }
+    <!-- CONFIGURACIÓN DE ESCENA (OBLIGATORIO PARA EL OVERLAY) -->
+    <!-- Esto conecta con tu archivo SceneDelegate.swift -->
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <false/>
+        <key>UISceneConfigurations</key>
+        <dict>
+            <key>UIWindowSceneSessionRoleApplication</key>
+            <array>
+                <dict>
+                    <key>UISceneConfigurationName</key>
+                    <string>Default Configuration</string>
+                    <key>UISceneDelegateClassName</key>
+                    <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+                </dict>
+            </array>
+        </dict>
+    </dict>
 
-        .panel {
-            position: relative; z-index: 10;
-            width: 90%; max-width: 400px; height: 650px;
-            background: var(--glass);
-            border: 1px solid var(--border); border-radius: 24px;
-            display: flex; flex-direction: column;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9); overflow: hidden;
-        }
+    <!-- ORIENTACIÓN Y ESTADO -->
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>armv7</string>
+        <string>arm64</string>
+    </array>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <false/>
 
-        #login-screen {
-            position: absolute; inset: 0;
-            background: rgba(10, 10, 12, 0.98);
-            z-index: 50; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; padding: 30px;
-        }
+    <!-- CONFIGURACIÓN WEBVIEW (CRÍTICO PARA FUNCIONES JS) -->
+    <!-- Permite JavaScript y apertura automática de ventanas en el overlay -->
+    <key>WebKitPreferences</key>
+    <dict>
+        <key>webKitJavaScriptEnabled</key>
+        <true/>
+        <key>webKitJavaScriptCanOpenWindowsAutomatically</key>
+        <true/>
+    </dict>
 
-        .onyx-logo { font-size: 32px; font-weight: 900; color: white; letter-spacing: 4px; font-style: italic; margin-bottom: 5px; }
-        .onyx-sub { color: var(--primary); font-size: 10px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 40px; }
-        
-        .key-input {
-            width: 100%; padding: 15px;
-            background: transparent; border: none; border-bottom: 2px solid #333;
-            color: white; text-align: center; font-size: 16px; outline: none; letter-spacing: 2px;
-            transition: 0.3s; margin-bottom: 10px;
-        }
-        .key-input:focus { border-color: var(--primary); }
+    <!-- PERMISOS DE ACCESO A ARCHIVOS LOCALES -->
+    <!-- Necesario para cargar www/index.html y permitir funciones del overlay -->
+    <key>NSBrowserUsageDescription</key>
+    <string>La app necesita acceso a archivos locales para cargar el overlay.</string>
 
-        .btn-unlock {
-            margin-top: 20px; width: 100%; padding: 15px;
-            background: var(--primary); border: none; border-radius: 8px;
-            color: white; font-weight: bold; cursor: pointer;
-            box-shadow: 0 0 15px rgba(160, 32, 240, 0.4);
-            display: flex; justify-content: center; align-items: center; gap: 8px;
-        }
-        .btn-unlock:disabled { opacity: 0.5; cursor: not-allowed; }
+    <!-- PRIVACIDAD - REQUERIDO POR APPLE -->
+    <!-- Descripciones de permisos recomendadas -->
+    <key>NSCameraUsageDescription</key>
+    <string>Este overlay no requiere acceso a cámara.</string>
 
-        .status-msg { margin-top: 15px; font-size: 11px; color: #ff3333; height: 15px; text-align: center; }
-
-        .header {
-            padding: 20px; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);
-        }
-        .title h1 { color: white; font-size: 18px; font-weight: 800; font-style: italic; }
-        .title span { color: #888; font-size: 9px; letter-spacing: 1px; }
-        .badge { 
-            background: rgba(255, 51, 51, 0.1); color: #ff3333;
-            padding: 4px 10px; border-radius: 10px; font-size: 9px; font-weight: bold; 
-            border: 1px solid rgba(255, 51, 51, 0.2); 
-        }
-
-        .nav-bar {
-            display: flex; justify-content: space-around; padding: 15px 0;
-            background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border);
-        }
-        .nav-item { color: #555; cursor: pointer; transition: 0.3s; }
-        .nav-item.active { color: var(--primary); transform: scale(1.2); filter: drop-shadow(0 0 5px var(--primary)); }
-
-        .content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
-        .content::-webkit-scrollbar { width: 0; }
-
-        .tab { display: none; animation: slideUp 0.3s ease; }
-        .tab.active { display: block; }
-        @keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
-
-        .feature-box {
-            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
-            border-radius: 12px; padding: 12px 15px; margin-bottom: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .f-text h3 { color: #eee; font-size: 13px; font-weight: 600; }
-        .f-text p { color: #777; font-size: 9px; text-transform: uppercase; margin-top: 2px; }
-
-        .switch { width: 40px; height: 20px; position: relative; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; inset: 0; background: #333; border-radius: 20px; transition: .3s; }
-        .slider:before { content:""; position: absolute; height: 16px; width: 16px; left: 2px; bottom: 2px; background: #888; border-radius: 50%; transition: .3s; }
-        input:checked + .slider { background: var(--primary); }
-        input:checked + .slider:before { transform: translateX(20px); background: white; }
-
-        .range-box { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
-        .range-head { display: flex; justify-content: space-between; color: white; font-size: 11px; margin-bottom: 10px; }
-        input[type=range] { width: 100%; -webkit-appearance: none; background: transparent; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; background: var(--primary); border-radius: 50%; margin-top: -5px; box-shadow: 0 0 10px var(--primary); }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
-
-        .gen-container { text-align: center; }
-        .gen-display { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .sensi-card { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 10px; border-radius: 8px; }
-        .sensi-card span { display: block; color: #888; font-size: 10px; }
-        .sensi-card strong { color: var(--accent); font-size: 18px; }
-        .btn-gen {
-            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
-            width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; margin-top: 15px;
-            font-weight: bold; cursor: pointer; letter-spacing: 1px;
-        }
-
-        .fab {
-            width: 100%; padding: 15px; background: white; color: black;
-            border: none; border-radius: 12px; font-weight: 900;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            cursor: pointer; margin-top: 10px; font-style: italic;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="overlay"></div>
-    <div id="fov-visual"></div>
-
-    <div class="panel">
-        <div id="login-screen">
-            <div class="onyx-logo">ONYX IPA</div>
-            <div class="onyx-sub">iOS Injector System</div>
-            <input type="text" id="license" class="key-input" placeholder="PASTE KEY HERE">
-            <button id="btn-login" class="btn-unlock" onclick="login()">
-                <i data-lucide="key"></i> VERIFY KEY
-            </button>
-            <div id="status" class="status-msg"></div>
-        </div>
-
-        <div class="header">
-            <div class="title">
-                <h1>ONYX IPA</h1>
-                <span id="user-display">Esperando Key...</span>
-            </div>
-            <div class="badge" id="badge-display">LOCKED</div>
-        </div>
-
-        <div class="nav-bar">
-            <i data-lucide="crosshair" class="nav-item active" onclick="tab(0)"></i>
-            <i data-lucide="cpu" class="nav-item" onclick="tab(1)"></i>
-            <i data-lucide="bar-chart-2" class="nav-item" onclick="tab(2)"></i>
-            <i data-lucide="settings" class="nav-item" onclick="tab(3)"></i>
-        </div>
-
-        <div class="content">
-            <div id="tab-0" class="tab active">
-                <div class="feature-box">
-                    <div class="f-text"><h3>Aimlock Legit</h3><p>Suavizado Humanizado</p></div>
-                    <label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label>
-                </div>
-                <div class="feature-box">
-                    <div class="f-text"><h3>Draw FOV</h3><p>Mostrar Radio (Visible)</p></div>
-                    <label class="switch"><input type="checkbox" id="fov-toggle" onchange="toggleFov()"><span class="slider"></span></label>
-                </div>
-                <div class="range-box">
-                    <div class="range-head"><span>FOV Size</span><span id="fov-val">150 px</span></div>
-                    <input type="range" min="50" max="300" value="150" oninput="updateFov(this.value)">
-                </div>
-                <div class="feature-box">
-                    <div class="f-text"><h3>No Recoil 2.0</h3><p>Estabilizador X/Y</p></div>
-                    <label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label>
-                </div>
-                <div class="feature-box">
-                    <div class="f-text"><h3>Supresor ON</h3><p>Mayor precisión</p></div>
-                    <label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label>
-                </div>
-            </div>
-
-            <div id="tab-1" class="tab">
-                <div class="gen-container">
-                    <h3 style="color:white; font-size:14px; margin-bottom:10px;">AI SENSITIVITY GEN</h3>
-                    <div class="gen-display">
-                        <div class="sensi-card"><span>General</span><strong id="s-gen">--</strong></div>
-                        <div class="sensi-card"><span>Red Dot</span><strong id="s-red">--</strong></div>
-                        <div class="sensi-card"><span>Mira 2x</span><strong id="s-2x">--</strong></div>
-                        <div class="sensi-card"><span>Mira 4x</span><strong id="s-4x">--</strong></div>
-                        <div class="sensi-card" style="grid-column: span 2;"><span>DPI (iOS Cursor)</span><strong id="s-dpi" style="color:white;">--</strong></div>
-                    </div>
-                    <button class="btn-gen" onclick="generateSensi()">GENERAR CONFIG</button>
-                </div>
-            </div>
-
-            <div id="tab-2" class="tab">
-                <div class="feature-box">
-                    <div class="f-text"><h3>Touch Simulation</h3><p>0 Delay response</p></div>
-                    <label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label>
-                </div>
-                 <div class="feature-box">
-                    <div class="f-text"><h3>Fix 360</h3><p>Movimiento fluido</p></div>
-                    <label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label>
-                </div>
-                 <div class="feature-box">
-                    <div class="f-text"><h3>Macro Hidden</h3><p>Gelo Rápido</p></div>
-                    <label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label>
-                </div>
-            </div>
-
-            <div id="tab-3" class="tab">
-                <div class="feature-box">
-                    <div class="f-text"><h3>Bypass iOS</h3><p>Anti-Blacklist</p></div>
-                    <label class="switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
-                </div>
-                <button class="fab" onclick="openFF()">
-                    <i data-lucide="play"></i> ABRIR FREE FIRE
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        lucide.createIcons();
-
-        const Config = {
-            name: "PANEL IPA", 
-            ownerid: "tUa2yiLIT9",
-            version: "1.0"
-        };
-
-        async function login() {
-            const key = document.getElementById("license").value;
-            const btn = document.getElementById("btn-login");
-            const status = document.getElementById("status");
-
-            if(key.length < 5) {
-                status.innerText = "Key muy corta.";
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = "VERIFICANDO...";
-            status.innerText = "";
-
-            try {
-                // Forzamos la URL de la API v1.2 de KeyAuth
-                const baseUrl = "https://keyauth.win/api/1.2/";
-
-                // 1. INIT
-                const initResp = await fetch(`${baseUrl}?type=init&ver=${Config.version}&name=${Config.name}&ownerid=${Config.ownerid}`);
-                const initData = await initResp.json();
-
-                if (!initData.success) throw new Error(initData.message || "Error Init");
-
-                // 2. LICENSE
-                const loginResp = await fetch(`${baseUrl}?type=license&key=${key}&hwid=iphone_user&sessionid=${initData.sessionid}&name=${Config.name}&ownerid=${Config.ownerid}`);
-                const loginData = await loginResp.json();
-
-                if (loginData.success) {
-                    unlockPanel();
-                } else {
-                    throw new Error(loginData.message || "Key Inválida");
-                }
-
-            } catch (error) {
-                status.innerText = "ERROR DE CONEXIÓN / KEY";
-                console.error(error);
-                btn.disabled = false;
-                btn.innerHTML = '<i data-lucide="key"></i> VERIFY KEY';
-                lucide.createIcons();
-            }
-        }
-
-        function unlockPanel() {
-            const screen = document.getElementById('login-screen');
-            screen.style.transition = "opacity 0.5s";
-            screen.style.opacity = "0";
-            document.getElementById('user-display').innerText = "Licencia Activa";
-            document.getElementById('user-display').style.color = "#00e5ff";
-            const badge = document.getElementById('badge-display');
-            badge.innerText = "VERIFIED";
-            badge.style.color = "#00ff88";
-            badge.style.borderColor = "#00ff88";
-            setTimeout(() => screen.style.display = "none", 500);
-        }
-
-        function tab(idx) {
-            vibrate();
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            document.querySelectorAll('.nav-item')[idx].classList.add('active');
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab')[idx].classList.add('active');
-        }
-
-        function toggleFov() {
-            vibrate();
-            const circle = document.getElementById('fov-visual');
-            circle.style.display = document.getElementById('fov-toggle').checked ? 'block' : 'none';
-        }
-
-        function updateFov(val) {
-            document.getElementById('fov-val').innerText = val + " px";
-            const circle = document.getElementById('fov-visual');
-            circle.style.width = val + "px";
-            circle.style.height = val + "px";
-        }
-
-        function generateSensi() {
-            vibrate();
-            const r = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-            document.getElementById('s-gen').innerText = r(150, 200) + "%";
-            document.getElementById('s-red').innerText = r(160, 200) + "%";
-            document.getElementById('s-2x').innerText = r(170, 200) + "%";
-            document.getElementById('s-4x').innerText = r(180, 200) + "%";
-            document.getElementById('s-dpi').innerText = r(90, 125);
-        }
-
-        function vibrate() { if(navigator.vibrate) navigator.vibrate(10); }
-        function openFF() { window.location.href = "freefireth://"; }
-    </script>
-</body>
-</html>
+    <!-- FONDO TRANSPARENTE DEL OVERLAY -->
+    <!-- Permite que el overlay sea completamente transparente -->
+    <key>UIStatusBarHidden</key>
+    <true/>
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleLightContent</string>
+</dict>
+</plist>
