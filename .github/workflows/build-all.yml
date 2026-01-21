@@ -36,7 +36,7 @@ jobs:
         ./gradlew assembleDebug
 
     - name: Upload APK Debug
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: OnyxOverlay-APK-debug
         path: android/build/outputs/apk/debug/app-debug.apk
@@ -47,7 +47,7 @@ jobs:
         ./gradlew assembleRelease
 
     - name: Upload APK Release
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: OnyxOverlay-APK-release
         path: android/build/outputs/apk/release/app-release-unsigned.apk
@@ -85,7 +85,7 @@ jobs:
           -exportPath build/ipa
 
     - name: Upload IPA
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: OnyxOverlay-IPA
         path: build/ipa/OnyxOverlay.ipa
@@ -98,17 +98,17 @@ jobs:
 
     steps:
     - name: Download APK Debug
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: OnyxOverlay-APK-debug
 
     - name: Download APK Release
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: OnyxOverlay-APK-release
 
     - name: Download IPA
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: OnyxOverlay-IPA
 

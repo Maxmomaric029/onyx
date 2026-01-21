@@ -42,7 +42,7 @@ jobs:
           -exportPath build/ipa
 
     - name: Upload IPA Debug
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: OnyxOverlay-ios
         path: OnyxOverlay/build/ipa/OnyxOverlay.ipa
