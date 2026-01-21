@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- NOMBRE DE LA APP -->
+    <key>CFBundleName</key>
+    <string>OnyxOverlay</string>
+    <key>CFBundleDisplayName</key>
+    <string>ONYX IPA</string>
+
+    <!-- IDENTIFICADOR (IMPORTANTE) -->
+    <key>CFBundleIdentifier</key>
+    <string>com.bbloodie.onyx.overlay</string>
+    
+    <!-- VERSION -->
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+
+    <!-- TIPO DE EJECUTABLE -->
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    
+    <!-- PERMISOS DE INTERNET (OBLIGATORIO PARA KEYAUTH) -->
+    <!-- Sin esto, KeyAuth fallará -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
+
+    <!-- CONFIGURACIÓN DE ESCENA (OBLIGATORIO PARA EL OVERLAY) -->
+    <!-- Esto conecta con tu archivo SceneDelegate.swift -->
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <false/>
+        <key>UISceneConfigurations</key>
+        <dict>
+            <key>UIWindowSceneSessionRoleApplication</key>
+            <array>
+                <dict>
+                    <key>UISceneConfigurationName</key>
+                    <string>Default Configuration</string>
+                    <key>UISceneDelegateClassName</key>
+                    <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+                </dict>
+            </array>
+        </dict>
+    </dict>
+
+    <!-- ORIENTACIÓN Y ESTADO -->
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>armv7</string>
+        <string>arm64</string>
+    </array>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <false/>
+
+    <!-- CONFIGURACIÓN WEBVIEW (CRÍTICO PARA FUNCIONES JS) -->
+    <!-- Permite JavaScript y apertura automática de ventanas en el overlay -->
+    <key>WebKitPreferences</key>
+    <dict>
+        <key>webKitJavaScriptEnabled</key>
+        <true/>
+        <key>webKitJavaScriptCanOpenWindowsAutomatically</key>
+        <true/>
+    </dict>
+
+    <!-- PERMISOS DE ACCESO A ARCHIVOS LOCALES -->
+    <!-- Necesario para cargar www/index.html y permitir funciones del overlay -->
+    <key>NSBrowserUsageDescription</key>
+    <string>La app necesita acceso a archivos locales para cargar el overlay.</string>
+
+    <!-- PRIVACIDAD - REQUERIDO POR APPLE -->
+    <!-- Descripciones de permisos recomendadas -->
+    <key>NSCameraUsageDescription</key>
+    <string>Este overlay no requiere acceso a cámara.</string>
+
+    <!-- FONDO TRANSPARENTE DEL OVERLAY -->
+    <!-- Permite que el overlay sea completamente transparente -->
+    <key>UIStatusBarHidden</key>
+    <true/>
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleLightContent</string>
+</dict>
+</plist>

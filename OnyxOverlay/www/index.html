@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
+    <title>ONYX IPA</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #a020f0; 
+            --primary-dark: #4b0082;
+            --accent: #00e5ff; 
+            --glass: rgba(18, 18, 18, 0.90);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        html, body {
+            background: url('https://i.pinimg.com/1200x/aa/9c/8e/aa9c8e6668a9e94439b3e434901254cc.jpg') no-repeat center center;
+            background-size: cover;
+            background-attachment: fixed;
+            background-color: #0a0a0c;
+            height: 100vh; width: 100vw; overflow: hidden;
+            pointer-events: none; 
+        }
+
+        /* --- REAL FOV (Círculo rojo en pantalla) --- */
+        #fov-visual {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            border: 1px solid rgba(255, 0, 0, 0.8);
+            background: rgba(255, 0, 0, 0.1); 
+            border-radius: 50%;
+            pointer-events: none; z-index: 9999; 
+            display: none;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            transition: width 0.2s, height 0.2s;
+        }
+
+        /* --- BURBUJA FLOTANTE --- */
+        #floating-icon {
+            position: fixed; top: 100px; left: 10px; width: 50px; height: 50px;
+            background: var(--primary); border-radius: 50%; border: 2px solid white;
+            box-shadow: 0 0 15px var(--primary); 
+            display: none; 
+            align-items: center; justify-content: center; 
+            z-index: 9999; pointer-events: auto; 
+        }
+
+        /* --- MENU MINI (Overlay) --- */
+        #overlay-menu {
+            position: fixed; top: 100px; left: 70px; width: 260px; max-height: 450px;
+            background: rgba(15, 15, 15, 0.95); border: 1px solid var(--border);
+            border-radius: 15px; display: none; flex-direction: column;
+            z-index: 9998; pointer-events: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.9);
+        }
+        .overlay-header {
+            background: var(--primary); padding: 10px; border-radius: 15px 15px 0 0;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: move; 
+        }
+        .overlay-body { 
+            padding: 10px; 
+            overflow-y: auto; 
+        }
+        .mini-divider { 
+            color: var(--accent); font-size: 10px; font-weight: bold; 
+            margin: 15px 0 5px 0; border-bottom: 1px solid #333; letter-spacing: 1px;
+        }
+
+        /* --- PANEL PRINCIPAL --- */
+        .panel {
+            position: relative; z-index: 10;
+            width: 90%; max-width: 400px; height: 650px;
+            background: transparent;
+            border: 1px solid var(--border); border-radius: 24px;
+            display: flex; flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9); 
+            overflow: hidden;
+            pointer-events: auto; 
+            margin: auto; top: 50%; transform: translateY(-50%);
+        }
+        /* Capa oscura para legibilidad */
+        .panel::before { content: ""; position: absolute; inset: 0; background: rgba(10, 10, 12, 0.75); z-index: 0; }
+
+        /* --- DECORACIONES SUTILES (Dentro del panel) --- */
+        .deco-gif {
+            position: absolute;
+            pointer-events: none;
+            mix-blend-mode: screen; /* Quita el negro del GIF */
+            opacity: 0.25; /* Transparencia sutil */
+            z-index: 1; /* Encima del fondo negro, debajo del texto */
+        }
+
+        /* Asegurar que el contenido este ENCIMA de los gifs */
+        .header, .nav-bar, .content, .launch-bar, #login-screen {
+            position: relative;
+            z-index: 5;
+        }
+
+        /* LOGIN */
+        #login-screen {
+            position: absolute; inset: 0;
+            background: rgba(10, 10, 12, 0.98);
+            z-index: 50; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 30px;
+        }
+        .onyx-logo { font-size: 32px; font-weight: 900; color: white; letter-spacing: 4px; font-style: italic; margin-bottom: 5px; }
+        .onyx-sub { color: var(--primary); font-size: 10px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 40px; }
+        
+        .key-input {
+            width: 100%; padding: 15px;
+            background: transparent; border: none; border-bottom: 2px solid #333;
+            color: white; text-align: center; font-size: 16px; outline: none; letter-spacing: 2px;
+            transition: 0.3s; margin-bottom: 10px;
+        }
+        .key-input:focus { border-color: var(--primary); }
+
+        /* ESTILO BOTONES */
+        .btn-unlock {
+            margin-top: 20px; width: 100%; padding: 15px;
+            background: var(--primary); border: none; border-radius: 8px;
+            color: white; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 15px rgba(160, 32, 240, 0.4);
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+            transition: 0.3s;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-unlock:disabled { 
+            background: #333; 
+            color: #777; 
+            box-shadow: none; 
+            cursor: not-allowed; 
+            opacity: 0.7;
+        }
+
+        .status-msg { margin-top: 15px; font-size: 11px; color: #ff3333; height: 15px; }
+
+        /* HEADER */
+        .header {
+            padding: 20px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);
+        }
+        .title h1 { color: white; font-size: 18px; font-weight: 800; font-style: italic; }
+        .title span { color: #888; font-size: 9px; letter-spacing: 1px; } 
+        .badge { 
+            background: rgba(255, 51, 51, 0.1); color: #ff3333;
+            padding: 4px 10px; border-radius: 10px; font-size: 9px; font-weight: bold; 
+            border: 1px solid rgba(255, 51, 51, 0.2); 
+        }
+
+        /* NAV */
+        .nav-bar {
+            display: flex; justify-content: space-around; padding: 15px 0;
+            background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border);
+        }
+        .nav-item { color: #555; cursor: pointer; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); transform: scale(1.2); filter: drop-shadow(0 0 5px var(--primary)); }
+
+        /* CONTENT */
+        .content { 
+            flex: 1; overflow-y: auto; padding: 20px; 
+            padding-bottom: 80px; 
+        }
+        .content::-webkit-scrollbar { width: 0; }
+
+        .tab { display: none; animation: slideUp 0.3s ease; }
+        .tab.active { display: block; }
+        @keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+        /* COMPONENTS */
+        .feature-box {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px 15px; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .f-text h3 { color: #eee; font-size: 13px; font-weight: 600; }
+        .f-text p { color: #777; font-size: 9px; text-transform: uppercase; margin-top: 2px; }
+
+        .switch { width: 40px; height: 20px; position: relative; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; inset: 0; background: #333; border-radius: 20px; transition: .3s; }
+        .slider:before { content:""; position: absolute; height: 16px; width: 16px; left: 2px; bottom: 2px; background: #888; border-radius: 50%; transition: .3s; }
+        input:checked + .slider { background: var(--primary); }
+        input:checked + .slider:before { transform: translateX(20px); background: white; }
+
+        .range-box { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .range-head { display: flex; justify-content: space-between; color: white; font-size: 11px; margin-bottom: 10px; }
+        input[type=range] { width: 100%; -webkit-appearance: none; appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 14px; width: 14px; background: var(--primary); border-radius: 50%; margin-top: -5px; box-shadow: 0 0 10px var(--primary); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
+
+        /* GENERATOR */
+        .gen-container { text-align: center; }
+        .gen-display { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .sensi-card { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 10px; border-radius: 8px; }
+        .sensi-card span { display: block; color: #888; font-size: 10px; }
+        .sensi-card strong { color: var(--accent); font-size: 18px; }
+        .btn-gen {
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+            width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; margin-top: 15px;
+            font-weight: bold; cursor: pointer; letter-spacing: 1px;
+        }
+
+        /* BARRA INFERIOR */
+        .launch-bar {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 20px;
+            background: linear-gradient(to top, #000, transparent);
+            display: flex; justify-content: center;
+        }
+
+        /* --- PARTÍCULAS --- */
+        #particles-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(var(--tx)) rotate(360deg); opacity: 0; }
+        }
+
+        /* --- PARTÍCULAS DENTRO DEL PANEL --- */
+        #panel-particles {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="particles-container"></div>
+    <div id="fov-visual"></div>
+
+    <div id="floating-icon" onclick="toggleOverlay()">
+        <i data-lucide="skull" color="white" size="28"></i>
+    </div>
+
+    <div id="overlay-menu">
+        <div class="overlay-header" id="drag-overlay">
+            <span style="color:white; font-weight:bold; font-style:italic;">ONYX MINI</span>
+            <i data-lucide="minus" color="white" size="18" onclick="toggleOverlay()"></i>
+        </div>
+        <div class="overlay-body">
+            
+            <div class="mini-divider">AIM & COMBAT</div>
+            <div class="feature-box" style="padding:8px; margin-bottom:5px;"><div class="f-text"><h3>Aimlock Legit</h3></div><label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label></div>
+            <div class="feature-box" style="padding:8px; margin-bottom:5px;"><div class="f-text"><h3>Draw FOV</h3></div><label class="switch"><input type="checkbox" id="fov-toggle-mini" onchange="toggleFovMini()"><span class="slider"></span></label></div>
+            <div class="range-box" style="padding:8px; margin-bottom:5px;"><div class="range-head" style="font-size:10px;"><span>FOV Size</span><span id="fov-val-mini">150 px</span></div><input type="range" min="50" max="300" value="150" oninput="updateFovMini(this.value)"></div>
+            <div class="feature-box" style="padding:8px; margin-bottom:5px;"><div class="f-text"><h3>No Recoil 2.0</h3></div><label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label></div>
+            <div class="feature-box" style="padding:8px; margin-bottom:5px;"><div class="f-text"><h3>Supresor ON</h3></div><label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label></div>
+
+            <div class="mini-divider">SYSTEM</div>
+            <div class="feature-box" style="padding:8px; margin-bottom:5px;"><div class="f-text"><h3>Touch Sim</h3></div><label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label></div>
+            <div class="feature-box" style="padding:8px; margin-bottom:5px;"><div class="f-text"><h3>Fix 360</h3></div><label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label></div>
+            <div class="feature-box" style="padding:8px; margin-bottom:5px;"><div class="f-text"><h3>Macro Hidden</h3></div><label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label></div>
+
+            <div class="mini-divider">SECURITY</div>
+            <div class="feature-box" style="padding:8px; margin-bottom:5px;"><div class="f-text"><h3>Bypass iOS</h3></div><label class="switch"><input type="checkbox" checked disabled><span class="slider"></span></label></div>
+            <div class="feature-box" style="padding:8px; margin-bottom:5px;"><div class="f-text"><h3>Clear Logs</h3></div><label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label></div>
+        
+        </div>
+    </div>
+
+    <div class="panel" id="main-panel">
+        <div id="panel-particles"></div>
+        
+        <div id="login-screen">
+            <div class="onyx-logo">ONYX IPA</div>
+            <div class="onyx-sub">iOS Injector System</div>
+            <input type="text" id="license" class="key-input" placeholder="PASTE KEY HERE">
+            <button id="btn-login" class="btn-unlock" onclick="login()">
+                <i data-lucide="key"></i> VERIFY KEY
+            </button>
+            <div id="status" class="status-msg"></div>
+        </div>
+
+        <div class="header">
+            <div class="title">
+                <h1>ONYX IPA</h1>
+                <span id="user-display">Esperando Key...</span>
+            </div>
+            <div class="badge" id="badge-display">LOCKED</div>
+        </div>
+
+        <div class="nav-bar">
+            <i data-lucide="crosshair" class="nav-item active" onclick="tab(0)"></i>
+            <i data-lucide="cpu" class="nav-item" onclick="tab(1)"></i>
+            <i data-lucide="bar-chart-2" class="nav-item" onclick="tab(2)"></i>
+            <i data-lucide="settings" class="nav-item" onclick="tab(3)"></i>
+        </div>
+
+        <div class="content">
+
+            <div id="tab-0" class="tab active">
+                <div class="feature-box">
+                    <div class="f-text"><h3>Aimlock Legit</h3><p>Suavizado Humanizado</p></div>
+                    <label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label>
+                </div>
+                
+                <div class="feature-box">
+                    <div class="f-text"><h3>Draw FOV</h3><p>Mostrar Radio (Visible)</p></div>
+                    <label class="switch"><input type="checkbox" id="fov-toggle" onchange="toggleFov()"><span class="slider"></span></label>
+                </div>
+
+                <div class="range-box">
+                    <div class="range-head"><span>FOV Size</span><span id="fov-val">150 px</span></div>
+                    <input type="range" min="50" max="300" value="150" oninput="updateFov(this.value)">
+                </div>
+
+                <div class="feature-box">
+                    <div class="f-text"><h3>No Recoil 2.0</h3><p>Estabilizador X/Y</p></div>
+                    <label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label>
+                </div>
+
+                <div class="feature-box">
+                    <div class="f-text"><h3>Supresor ON</h3><p>Mayor precisión</p></div>
+                    <label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label>
+                </div>
+            </div>
+
+            <div id="tab-1" class="tab">
+                <div class="gen-container">
+                    <h3 style="color:white; font-size:14px; margin-bottom:10px;">AI SENSITIVITY GEN</h3>
+                    <div class="gen-display">
+                        <div class="sensi-card"><span>General</span><strong id="s-gen">--</strong></div>
+                        <div class="sensi-card"><span>Red Dot</span><strong id="s-red">--</strong></div>
+                        <div class="sensi-card"><span>Mira 2x</span><strong id="s-2x">--</strong></div>
+                        <div class="sensi-card"><span>Mira 4x</span><strong id="s-4x">--</strong></div>
+                        <div class="sensi-card" style="grid-column: span 2;"><span>DPI (iOS Cursor)</span><strong id="s-dpi" style="color:white;">--</strong></div>
+                    </div>
+                    <button class="btn-gen" onclick="generateSensi()">GENERAR CONFIG</button>
+                </div>
+            </div>
+
+            <div id="tab-2" class="tab">
+                <div class="feature-box">
+                    <div class="f-text"><h3>Touch Simulation</h3><p>0 Delay response</p></div>
+                    <label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label>
+                </div>
+                 <div class="feature-box">
+                    <div class="f-text"><h3>Fix 360</h3><p>Movimiento fluido</p></div>
+                    <label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label>
+                </div>
+                 <div class="feature-box">
+                    <div class="f-text"><h3>Macro Hidden</h3><p>Gelo Rápido</p></div>
+                    <label class="switch"><input type="checkbox" onchange="vibrate()"><span class="slider"></span></label>
+                </div>
+                <div class="range-box">
+                    <div class="range-head"><span>Velocidad de Respuesta</span><span>0.1 ms</span></div>
+                    <input type="range" min="0" max="100" value="95">
+                </div>
+            </div>
+
+            <div id="tab-3" class="tab">
+                <div class="feature-box">
+                    <div class="f-text"><h3>Bypass iOS</h3><p>Anti-Blacklist</p></div>
+                    <label class="switch"><input type="checkbox" checked disabled><span class="slider"></span></label>
+                </div>
+                <div class="feature-box">
+                    <div class="f-text"><h3>Limpiar Logs</h3><p>Borrar rastros</p></div>
+                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="launch-bar">
+            <button id="btn-launch" class="btn-unlock" onclick="launchGame()" disabled>
+                <i data-lucide="zap"></i> INYECTAR Y ABRIR FREE FIRE
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+    lucide.createIcons();
+
+    // --- PARTICLE SYSTEM ---
+    function initParticles() {
+        const container = document.getElementById('particles-container');
+        const particleCount = 50;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            
+            const size = Math.random() * 3 + 1;
+            const x = Math.random() * window.innerWidth;
+            const duration = Math.random() * 10 + 15;
+            const tx = (Math.random() - 0.5) * 200;
+            const color = Math.random() > 0.5 ? 'rgba(160, 32, 240, 0.6)' : 'rgba(0, 229, 255, 0.6)';
+            
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            particle.style.left = x + 'px';
+            particle.style.top = window.innerHeight + 'px';
+            particle.style.background = color;
+            particle.style.boxShadow = `0 0 ${size * 2}px ${color}`;
+            particle.style.setProperty('--tx', tx + 'px');
+            particle.style.animation = `floatParticle ${duration}s linear infinite`;
+            particle.style.animationDelay = Math.random() * duration + 's';
+            
+            container.appendChild(particle);
+        }
+    }
+
+    // Iniciar partículas cuando carga la página
+    window.addEventListener('load', initParticles);
+
+    const Config = {
+        name: "PANEL IPA", 
+        ownerid: "tUa2yiLIT9",
+        version: "1.0"
+    };
+
+    const proxy = "https://cors-anywhere.herokuapp.com/"; 
+    const baseUrl = "https://keyauth.win/api/1.2/";
+
+    async function login() {
+        const key = document.getElementById("license").value;
+        const btn = document.getElementById("btn-login");
+        const status = document.getElementById("status");
+
+        if(key.length < 5) {
+            status.innerText = "Key muy corta.";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = "CONECTANDO...";
+        status.innerText = "";
+
+        try {
+            // 1. INIT
+            let initUrl = `${baseUrl}?type=init&ver=${Config.version}&name=${Config.name}&ownerid=${Config.ownerid}`;
+            let initResp = await fetch(initUrl).catch(() => fetch(proxy + initUrl));
+            let initData = await initResp.json();
+
+            if (!initData.success) throw new Error(initData.message);
+
+            // 2. LICENSE
+            let loginUrl = `${baseUrl}?type=license&key=${key}&hwid=iphone_user&sessionid=${initData.sessionid}&name=${Config.name}&ownerid=${Config.ownerid}`;
+            let loginResp = await fetch(loginUrl).catch(() => fetch(proxy + loginUrl));
+            let loginData = await loginResp.json();
+
+            if (loginData.success) {
+                unlockPanel();
+            } else {
+                status.innerText = "KEY INVÁLIDA O EXPIRADA";
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="key"></i> VERIFY KEY';
+            }
+
+        } catch (error) {
+            status.innerText = "ERROR DE CONEXIÓN";
+            console.error(error);
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="key"></i> REINTENTAR';
+        }
+        lucide.createIcons();
+    }
+
+    function unlockPanel() {
+        const screen = document.getElementById('login-screen');
+        screen.style.transition = "opacity 0.5s";
+        screen.style.opacity = "0";
+        document.getElementById('user-display').innerText = "Licencia Activa";
+        document.getElementById('user-display').style.color = "#00e5ff";
+        const badge = document.getElementById('badge-display');
+        badge.innerText = "VERIFIED";
+        badge.style.color = "#00ff88";
+        badge.style.borderColor = "#00ff88";
+        
+        // HABILITAR EL BOTÓN DE FREE FIRE
+        const launchBtn = document.getElementById('btn-launch');
+        launchBtn.disabled = false;
+        
+        setTimeout(() => screen.style.display = "none", 500);
+    }
+
+    function tab(idx) {
+        vibrate();
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.nav-item')[idx].classList.add('active');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab')[idx].classList.add('active');
+    }
+
+    // FOV LOGIC
+    function toggleFov() { vibrate(); updateFovLogic(document.getElementById('fov-toggle').checked); }
+    function toggleFovMini() { vibrate(); updateFovLogic(document.getElementById('fov-toggle-mini').checked); }
+    
+    function updateFovLogic(isChecked) {
+        document.getElementById('fov-toggle').checked = isChecked;
+        if(document.getElementById('fov-toggle-mini')) document.getElementById('fov-toggle-mini').checked = isChecked;
+        document.getElementById('fov-visual').style.display = isChecked ? 'block' : 'none';
+    }
+
+    function updateFov(val) { updateFovValue(val); }
+    function updateFovMini(val) { updateFovValue(val); }
+    
+    function updateFovValue(val) {
+        document.getElementById('fov-val').innerText = val + " px";
+        if(document.getElementById('fov-val-mini')) document.getElementById('fov-val-mini').innerText = val + " px";
+        
+        const circle = document.getElementById('fov-visual');
+        circle.style.width = val + "px";
+        circle.style.height = val + "px";
+    }
+
+    function generateSensi() {
+        vibrate();
+        const r = (min, max) => Math.floor(Math.random() * (max - min + 1) ) + min;
+        document.getElementById('s-gen').innerText = r(150, 200) + "%";
+        document.getElementById('s-red').innerText = r(160, 200) + "%";
+        document.getElementById('s-2x').innerText = r(170, 200) + "%";
+        document.getElementById('s-4x').innerText = r(180, 200) + "%";
+        document.getElementById('s-dpi').innerText = r(90, 125);
+    }
+
+    function vibrate() {
+        if(navigator.vibrate) navigator.vibrate(10);
+    }
+
+    function launchGame() {
+        vibrate();
+        document.getElementById('main-panel').style.display = 'none';
+        document.getElementById('floating-icon').style.display = 'flex';
+        // Abrir Free Fire
+        window.location.href = "freefireth://";
+    }
+
+    function toggleOverlay() {
+        vibrate();
+        const icon = document.getElementById('floating-icon');
+        const menu = document.getElementById('overlay-menu');
+        
+        if (menu.style.display === 'flex') {
+            menu.style.display = 'none';
+            icon.style.display = 'flex';
+        } else {
+            menu.style.display = 'flex';
+            icon.style.display = 'none';
+        }
+    }
+
+    // Draggable logic
+    dragElement(document.getElementById("overlay-menu"), document.getElementById("drag-overlay"));
+    dragElement(document.getElementById("floating-icon"), document.getElementById("floating-icon"));
+
+    function dragElement(elmnt, dragHandler) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        dragHandler.onmousedown = dragStart;
+        dragHandler.ontouchstart = dragStart;
+
+        function dragStart(e) {
+            if(e.type === 'touchstart') {
+                pos3 = e.touches[0].clientX; pos4 = e.touches[0].clientY;
+            } else {
+                pos3 = e.clientX; pos4 = e.clientY;
+            }
+            document.onmouseup = dragEnd; document.ontouchend = dragEnd;
+            document.onmousemove = dragMove; document.ontouchmove = dragMove;
+        }
+
+        function dragMove(e) {
+            let clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            let clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+            pos1 = pos3 - clientX; pos2 = pos4 - clientY;
+            pos3 = clientX; pos4 = clientY;
+            elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+            elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        }
+
+        function dragEnd() {
+            document.onmouseup = null; document.onmousemove = null;
+            document.ontouchend = null; document.ontouchmove = null;
+        }
+    }
+
+    // --- PARTÍCULAS ---
+    const particlesContainer = document.getElementById('particles-container');
+    const panelParticles = document.getElementById('panel-particles');
+
+    function createParticle(container = particlesContainer, isPanel = false) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        const size = Math.random() * 6 + 2;
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        particle.style.background = 'rgba(' + (Math.random() > 0.5 ? '160, 32, 240' : '0, 229, 255') + ', ' + (Math.random() * 0.5 + 0.3) + ')';
+        
+        if (isPanel) {
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = '100%';
+            particle.style.animationDuration = Math.random() * 8 + 6 + 's';
+        } else {
+            particle.style.left = Math.random() * 100 + 'vw';
+            particle.style.animationDuration = Math.random() * 2 + 3 + 's';
+        }
+        
+        particle.style.setProperty('--tx', Math.random() * 200 - 100 + 'px');
+        particle.style.animation = `floatParticle ${particle.style.animationDuration} linear infinite`;
+        particle.style.animationDelay = Math.random() * 2 + 's';
+        
+        container.appendChild(particle);
+
+        setTimeout(() => {
+            particle.remove();
+        }, parseFloat(particle.style.animationDuration) * 1000 + 2000);
+    }
+
+    setInterval(() => createParticle(particlesContainer, false), 100);
+    setInterval(() => createParticle(panelParticles, true), 150);
+
+    </script>
+</body>
+</html>
