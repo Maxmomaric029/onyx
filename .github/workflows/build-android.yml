@@ -1,0 +1,62 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Create assets directory and copy www files
+      run: |
+        mkdir -p android/src/main/assets/www
+        cp -r www/* android/src/main/assets/www/ || true
+
+    - name: Make gradlew executable
+      run: chmod +x android/gradlew
+
+    - name: Build Debug APK
+      run: |
+        cd android
+        ./gradlew assembleDebug
+
+    - name: Upload APK Debug
+      uses: actions/upload-artifact@v3
+      with:
+        name: OnyxOverlay-debug
+        path: android/build/outputs/apk/debug/app-debug.apk
+
+    - name: Build Release APK (unsigned)
+      run: |
+        cd android
+        ./gradlew assembleRelease
+
+    - name: Upload APK Release
+      uses: actions/upload-artifact@v3
+      with:
+        name: OnyxOverlay-release
+        path: android/build/outputs/apk/release/app-release-unsigned.apk
+
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          android/build/outputs/apk/debug/app-debug.apk
+          android/build/outputs/apk/release/app-release-unsigned.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,26 @@
+# Gradle files
+.gradle/
+build/
+gradle-app.setting
+gradlew
+gradlew.bat
+local.properties
+
+# IDE
+.idea/
+.project
+.classpath
+.c9/
+.DS_Store
+.vscode/
+*.swp
+
+# APK files
+*.apk
+*.ap_
+*.dex
+
+# Keys and credentials
+*.keystore
+*.jks
+signing.properties
